@@ -1,0 +1,11 @@
+services:
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: apple169
+    volumes:
+      - pgdata:/var/lib/postgresql
+
+volumes:
+  pgdata:

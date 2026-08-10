@@ -3,7 +3,11 @@ services:
     image: postgres
     restart: always
     environment:
-      POSTGRES_PASSWORD: apple169
+      POSTGRES_DB: test_catalog
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+    ports:
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql
 

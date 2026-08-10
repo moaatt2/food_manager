@@ -3,7 +3,7 @@ services:
     image: postgres
     restart: always
     environment:
-      POSTGRES_DB: test_catalog
+      POSTGRES_DB: food
       POSTGRES_USER: test
       POSTGRES_PASSWORD: test
     ports:

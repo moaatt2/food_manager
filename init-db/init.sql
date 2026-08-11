@@ -32,7 +32,7 @@ CREATE TABLE food.food.ingredients (
 );
 
 
-CREATE TABLE food.food.meal_recipies (
+CREATE TABLE food.food.meal_recipes (
     id SERIAL  PRIMARY KEY,
     meal_id    INTEGER,
     recipe     TEXT,
@@ -112,7 +112,7 @@ INSERT INTO food.food.ingredients (id, name, keeps_days, purchase_qty, storage)
         'Freezer'
     );
 
-INSERT INTO food.food.meal_recipies (meal_id, recipe)
+INSERT INTO food.food.meal_recipes (meal_id, recipe)
     VALUES (
         1,
         '1. Put desired number of chicken breasts in an oven safe container.\n2. Fill container with water.\n3. Preheat oven to ???.\n4. Cook chicken in oven for ?? minutes.'

@@ -29,7 +29,7 @@ class Meal(Base):
 
 
 class Meal_Recipe(Base):
-    __tablename__ = "meal_recipies"
+    __tablename__ = "meal_recipes"
     __table_args__ = {"schema": "food"}
 
     id:         Mapped[int]    = mapped_column(primary_key=True)

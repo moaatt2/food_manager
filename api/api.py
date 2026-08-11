@@ -2,7 +2,7 @@
 from datetime import datetime
 from typing import List, Optional
 from sqlalchemy.dialects.postgresql import ARRAY
-from sqlalchemy import select, create_engine
+from sqlalchemy import select, create_engine, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship, DeclarativeBase, Session
 
 # Base Class
@@ -17,6 +17,7 @@ class Meal(Base):
     id:         Mapped[int] = mapped_column(primary_key=True)
     name:       Mapped[str]
     source:     Mapped[str]
+    type:       Mapped[List[str]] = mapped_column(ARRAY(String))
     num_meals:  Mapped[int]
     keeps_days: Mapped[int]
     created_at: Mapped[datetime]
@@ -24,7 +25,7 @@ class Meal(Base):
     deleted_at: Mapped[Optional[datetime]]
 
     def __repr__(self):
-        return f"Meal(id={self.id!r}, name={self.name!r})"
+        return f"Meal(id={self.id!r}, name={self.name!r}, type={self.type!r})"
 
 # Create Engine/Session
 engine = create_engine("postgresql://test:test@localhost:5433/food")
@@ -34,6 +35,3 @@ with Session(engine) as session:
 
     for meal in session.scalars(stmt):
         print(meal)
-
-
-

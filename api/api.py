@@ -7,13 +7,13 @@
 from datetime import datetime
 from typing import List, Optional
 from sqlalchemy.dialects.postgresql import ARRAY
-from sqlalchemy import select, create_engine, String, ForeignKey
+from sqlalchemy import select, create_engine, String, ForeignKey, exc
 from sqlalchemy.orm import Mapped, mapped_column, relationship, DeclarativeBase, Session
 
 # FastAPI Imports
 from enum import Enum
 from typing import Annotated
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from fastapi import FastAPI, Path, status, HTTPException
 
 # Create Database engine
@@ -147,18 +147,200 @@ class Meal_Type(str, Enum):
     desert    = "Desert"
 
 
-# Meal class for creating meals
 class Meal_Create(BaseModel):
     name:       str
-    source:     str      | None = None
+    source:     str | None      = None
     type:       List[Meal_Type]
-    num_meals:  int             = 1
-    keeps_days: int             = 1
+    num_meals:  int             = Field(ge=1, default=1)
+    keeps_days: int             = Field(ge=1, default=1)
+
+
+class Meal_Recipe_Create(BaseModel):
+    meal_id: int
+    recipe:  str
+
+
+class Meal_Review_Create(BaseModel):
+    meal_id: int
+    rating:  int = Field(ge=1, le=5)
+    review:  str | None = None
+
+
+class Meal_Note_Create(BaseModel):
+    meal_id: int
+    name:    str
+    note:    str
+
+
+class Ingredient_Create(BaseModel):
+    name:         str
+    keeps_days:   int = Field(ge=1)
+    purchase_qty: str
+    note:         str | None = None
+    storage:      str
+
+
+class Meal_Ingredient_Create(BaseModel):
+    meal_id:       int
+    ingredient_id: int
+    quantity:      str
 
 
 #####################
 ### API Endpoints ###
 #####################
+
+### Create ###
+
+@app.post("/v1/meal", tags=["Post Methods"])
+async def create_meal(meal_data: Meal_Create):
+    with Session(engine) as session:
+
+        # Create ORM object
+        meal = Meal(
+            id         = None,
+            name       = meal_data.name,
+            source     = meal_data.source,
+            type       = meal_data.type,
+            num_meals  = meal_data.num_meals,
+            keeps_days = meal_data.keeps_days,
+        )
+
+        # Push object to database
+        session.begin()
+        session.add(meal)
+        session.commit()
+
+        # Update object and return to user
+        session.refresh(meal)
+        return {"meal": meal}
+
+
+@app.post("/v1/recipe", tags=["Post Methods"])
+async def create_recipe(recipe_data:Meal_Recipe_Create):
+    with Session(engine) as session:
+        try:
+
+            # Create ORM object
+            recipe = Meal_Recipe(
+                id      = None,
+                meal_id = recipe_data.meal_id,
+                recipe  = recipe_data.recipe
+            )
+
+            # Push row to database
+            session.begin()
+            session.add(recipe)
+            session.commit()
+
+            # Update object and return to user
+            session.refresh(recipe)
+            return {"recipe": recipe}
+
+        except exc.IntegrityError as e:
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=f"SQLAlchemy Itegrity Error {e._message()}")
+
+
+@app.post("/v1/review", tags=["Post Methods"])
+async def create_review(review_data: Meal_Review_Create):
+    with Session(engine) as session:
+        try:
+
+            # Create ORM Object
+            review = Meal_Review(
+                id      = None,
+                meal_id = review_data.meal_id,
+                rating  = review_data.rating,
+                review  = review_data.review,
+            )
+
+            # Push row to database
+            session.begin()
+            session.add(review)
+            session.commit()
+
+            # Update ojbect and return to use
+            session.refresh(review)
+            return {"review": review}
+
+        except exc.IntegrityError as e:
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=f"SQLAlchemy Itegrity Error {e._message()}")
+
+@app.post("/v1/note", tags=["Post Methods"])
+async def create_note(note_data: Meal_Note_Create):
+    with Session(engine) as session:
+        try:
+
+            # Create ORM object
+            note = Meal_Note(
+                id      = None,
+                meal_id = note_data.meal_id,
+                name    = note_data.name,
+                note    = note_data.note
+            )
+
+            # Push row to database
+            session.begin()
+            session.add(note)
+            session.commit()
+
+            # Update ojbect and return to use
+            session.refresh(note)
+            return {"note": note}
+
+        except exc.IntegrityError as e:
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=f"SQLAlchemy Itegrity Error {e._message()}")
+
+
+@app.post("/v1/ingredient", tags=["Post Methods"])
+async def create_ingredient(ingredient_data: Ingredient_Create):
+    with Session(engine) as session:
+
+        # Create ORM Object
+        ingredient = Ingredient(
+            id           = None,
+            name         = ingredient_data.name,
+            keeps_days   = ingredient_data.keeps_days,
+            purchase_qty = ingredient_data.purchase_qty,
+            note         = ingredient_data.note,
+            storage      = ingredient_data.storage,
+        )
+
+        # Push object to database
+        session.begin()
+        session.add(ingredient)
+        session.commit()
+
+        # Update object and return to user
+        session.refresh(ingredient)
+        return {"ingredient": ingredient}
+
+
+@app.post("/v1/meal_ingredient", tags=["Post Methods"])
+async def create_meal_ingredient(meal_ingredient_data: Meal_Ingredient_Create):
+    with Session(engine) as session:
+        try:
+
+            # Create ORM object
+            meal_ingredient = Meal_Ingredient(
+                id            = None,
+                meal_id       = meal_ingredient_data.meal_id,
+                ingredient_id = meal_ingredient_data.ingredient_id,
+                quantity      = meal_ingredient_data.quantity,
+            )
+
+            # Push row to database
+            session.begin()
+            session.add(meal_ingredient)
+            session.commit()
+
+            # Update ojbect and return to use
+            session.refresh(meal_ingredient)
+            return {"meal_ingredient": meal_ingredient}
+
+        except exc.IntegrityError as e:
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=f"SQLAlchemy Itegrity Error {e._message()}")
+
 
 ### Read ###
 
@@ -242,37 +424,6 @@ async def get_note(ingredient_id: Annotated[int, Path(title="Ingredient ID", gt=
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="There is no ingredient with that ingredient_id")
 
 
-### Create ###
-
-@app.post("/v1/meal", tags=["Post Methods"])
-async def create_meal(meal_data: Meal_Create):
-    with Session(engine) as session:
-
-        # Create ORM object
-        meal = Meal(
-            id         = None,
-            name       = meal_data.name,
-            source     = meal_data.source,
-            type       = meal_data.type,
-            num_meals  = meal_data.num_meals,
-            keeps_days = meal_data.keeps_days,
-        )
-
-        # Push object to database
-        session.begin()
-        session.add(meal)
-        session.commit()
-
-        # Update object and return to user
-        session.refresh(meal)
-        return {"meal": meal}
-
-
-### Update ###
-
-# TODO
-
-
 ### Delete ###
 
 @app.delete("/v1/meal/{meal_id}", tags=["Delete Methods"])
@@ -294,12 +445,6 @@ async def delete_meal(meal_id: Annotated[int, Path(title="Meal ID", gt=0, descri
             return {"message": f"Sucesfully deleted meal {meal_id}"}
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="There is no meal with that meal_id")
-
-
-### Search ###
-
-# TODO
-
 
 
 

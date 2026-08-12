@@ -12,13 +12,22 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship, DeclarativeBase,
 
 # FastAPI Imports
 from typing import Annotated
-from fastapi import FastAPI, Path, HTTPException, status
+from fastapi import FastAPI, Path, status, HTTPException
 
 # Create Database engine
 engine = create_engine("postgresql://test:test@localhost:5433/food")
 
+# Tag descriptions for fast API docs
+openapi_tags = [
+    {"name": "Get Methods", "description": "Get Records by ID"}
+]
+
 # Create FastAPI App
-app = FastAPI()
+app = FastAPI(
+    title="Food Manager Backend",
+    version="0.0.0",
+    openapi_tags=openapi_tags
+    )
 
 
 ######################
@@ -128,7 +137,7 @@ class Meal_Ingredient(Base):
 
 ### Getters ###
 
-@app.get("/v1/meal/{meal_id}")
+@app.get("/v1/meal/{meal_id}", tags=["Get Methods"])
 async def get_meal(meal_id: Annotated[int, Path(title="Meal ID", gt=0, description="The ID of the meal you wish to fetch.")]):
     with Session(engine) as session:
 
@@ -144,7 +153,7 @@ async def get_meal(meal_id: Annotated[int, Path(title="Meal ID", gt=0, descripti
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="There is no meal with that meal_id")
 
 
-@app.get("/v1/recipe/{recipe_id}")
+@app.get("/v1/recipe/{recipe_id}", tags=["Get Methods"])
 async def get_recipe(recipe_id: Annotated[int, Path(title="Recipe ID", gt=0, description="The ID of the recipe you wish to fetch.")]):
     with Session(engine) as session:
 
@@ -160,7 +169,7 @@ async def get_recipe(recipe_id: Annotated[int, Path(title="Recipe ID", gt=0, des
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="There is no recipe with that recipe_id")
 
 
-@app.get("/v1/review/{review_id}")
+@app.get("/v1/review/{review_id}", tags=["Get Methods"])
 async def get_review(review_id: Annotated[int, Path(title="Review ID", gt=0, description="The ID of the review you wish to fetch.")]):
     with Session(engine) as session:
 
@@ -176,7 +185,7 @@ async def get_review(review_id: Annotated[int, Path(title="Review ID", gt=0, des
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="There is no review with that review_id")
 
 
-@app.get("/v1/note/{note_id}")
+@app.get("/v1/note/{note_id}", tags=["Get Methods"])
 async def get_note(note_id: Annotated[int, Path(title="Note ID", gt=0, description="The ID of the note you wish to fetch.")]):
     with Session(engine) as session:
 
@@ -192,7 +201,7 @@ async def get_note(note_id: Annotated[int, Path(title="Note ID", gt=0, descripti
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="There is no note with that note_id")
 
 
-@app.get("/v1/ingredient/{ingredient_id}")
+@app.get("/v1/ingredient/{ingredient_id}", tags=["Get Methods"])
 async def get_note(ingredient_id: Annotated[int, Path(title="Ingredient ID", gt=0, description="The ID of the ingredient you wish to fetch.")]):
     with Session(engine) as session:
 
@@ -206,3 +215,6 @@ async def get_note(ingredient_id: Annotated[int, Path(title="Ingredient ID", gt=
             return {"ingredient": ingredient}
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="There is no ingredient with that ingredient_id")
+
+
+

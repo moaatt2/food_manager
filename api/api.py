@@ -1,10 +1,24 @@
 
-# Imports
+#####################
+### Imports/Setup ###
+#####################
+
+# ORM Imports
 from datetime import datetime
 from typing import List, Optional
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy import select, create_engine, String, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship, DeclarativeBase, Session
+
+# FastAPI Imports
+from typing import Annotated
+from fastapi import FastAPI, Path
+
+# Create Database engine
+engine = create_engine("postgresql://test:test@localhost:5433/food")
+
+# Create FastAPI App
+app = FastAPI()
 
 
 ######################
@@ -108,20 +122,16 @@ class Meal_Ingredient(Base):
     deleted_at:    Mapped[Optional[datetime]]
 
 
-####################
-### Test Queries ###
-####################
+#####################
+### API Endpoints ###
+#####################
 
-# Create Engine/Session
-engine = create_engine("postgresql://test:test@localhost:5433/food")
-with Session(engine) as session:
+@app.get("/v1/meal/{meal_id}")
+async def get_meal(meal_id: Annotated[int, Path(title="Meal ID", gt=0, description="Description")]):
+    with Session(engine) as session:
+        stmt = select(Meal).where(Meal.id == meal_id)
 
-    # Single Table Query
-    stmt = select(Meal).where(Meal.id == 1)
-    for meal in session.scalars(stmt):
-        print(meal)
+        meal = session.scalars(stmt).one()
 
-    # Multi Table Query
-    stmt = select(Meal_Recipe).join(Meal).where(Meal.type.any('Lunch'))
-    for recipe in session.scalars(stmt):
-        print(recipe)
+        return {"meal_id": meal_id, "meal": meal}
+

@@ -342,6 +342,39 @@ async def create_meal_ingredient(meal_ingredient_data: Meal_Ingredient_Create):
             raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=f"SQLAlchemy Itegrity Error {e._message()}")
 
 
+@app.post("/v1/meal_ingredients", tags=["Post Methods"])
+async def create_meal_ingredients(meal_ingredients_data: List[Meal_Ingredient_Create]):
+    with Session(engine) as session:
+        try:
+
+            # Begin transaction
+            session.begin()
+
+            ingredients = list()
+            for ingredient in meal_ingredients_data:
+
+                # Create ORM Object
+                meal_ingredient = Meal_Ingredient(
+                    id            = None,
+                    meal_id       = ingredient.meal_id,
+                    ingredient_id = ingredient.ingredient_id,
+                    quantity      = ingredient.quantity,
+                )
+                session.add(meal_ingredient)
+                ingredients.append(meal_ingredient)
+
+            # Commit Transaction
+            session.commit()
+            _ = [session.refresh(i) for i in ingredients]
+
+            # Update objects and return
+            return ingredients
+
+
+        except exc.IntegrityError as e:
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=f"SQLAlchemy Itegrity Error {e._message()}")
+
+
 ### Read ###
 
 @app.get("/v1/meal/{meal_id}", tags=["Get Methods"])

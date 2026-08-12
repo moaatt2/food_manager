@@ -126,8 +126,10 @@ class Meal_Ingredient(Base):
 ### API Endpoints ###
 #####################
 
+### Getters ###
+
 @app.get("/v1/meal/{meal_id}")
-async def get_meal(meal_id: Annotated[int, Path(title="Meal ID", gt=0, description="Description")]):
+async def get_meal(meal_id: Annotated[int, Path(title="Meal ID", gt=0, description="The ID of the meal you wish to fetch.")]):
     with Session(engine) as session:
 
         # Query to find meal
@@ -137,6 +139,70 @@ async def get_meal(meal_id: Annotated[int, Path(title="Meal ID", gt=0, descripti
         meal = session.scalars(stmt).one_or_none()
 
         if meal is not None:
-            return {"meal_id": meal_id, "meal": meal}
+            return {"meal": meal}
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="There is no meal with that meal_id")
+
+
+@app.get("/v1/recipe/{recipe_id}")
+async def get_recipe(recipe_id: Annotated[int, Path(title="Recipe ID", gt=0, description="The ID of the recipe you wish to fetch.")]):
+    with Session(engine) as session:
+
+        # Query to find meal
+        stmt = select(Meal_Recipe).where(Meal_Recipe.id == recipe_id)
+
+        # Query Result
+        recipe = session.scalars(stmt).one_or_none()
+
+        if recipe is not None:
+            return {"recipe": recipe}
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="There is no recipe with that recipe_id")
+
+
+@app.get("/v1/review/{review_id}")
+async def get_review(review_id: Annotated[int, Path(title="Review ID", gt=0, description="The ID of the review you wish to fetch.")]):
+    with Session(engine) as session:
+
+        # Query to find meal
+        stmt = select(Meal_Review).where(Meal_Review.id == review_id)
+
+        # Query Result
+        review = session.scalars(stmt).one_or_none()
+
+        if review is not None:
+            return {"review": review}
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="There is no review with that review_id")
+
+
+@app.get("/v1/note/{note_id}")
+async def get_note(note_id: Annotated[int, Path(title="Note ID", gt=0, description="The ID of the note you wish to fetch.")]):
+    with Session(engine) as session:
+
+        # Query to find meal
+        stmt = select(Meal_Note).where(Meal_Note.id == note_id)
+
+        # Query Result
+        note = session.scalars(stmt).one_or_none()
+
+        if note is not None:
+            return {"note": note}
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="There is no note with that note_id")
+
+
+@app.get("/v1/ingredient/{ingredient_id}")
+async def get_note(ingredient_id: Annotated[int, Path(title="Ingredient ID", gt=0, description="The ID of the ingredient you wish to fetch.")]):
+    with Session(engine) as session:
+
+        # Query to find meal
+        stmt = select(Ingredient).where(Ingredient.id == ingredient_id)
+
+        # Query Result
+        ingredient = session.scalars(stmt).one_or_none()
+
+        if ingredient is not None:
+            return {"ingredient": ingredient}
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="There is no ingredient with that ingredient_id")

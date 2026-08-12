@@ -52,8 +52,8 @@ class Meal(Base):
     type:       Mapped[List[str]] = mapped_column(ARRAY(String))
     num_meals:  Mapped[int]
     keeps_days: Mapped[int]
-    created_at: Mapped[datetime]
-    updated_at: Mapped[datetime]
+    created_at: Mapped[datetime]  = mapped_column(default=datetime.now())
+    updated_at: Mapped[datetime]  = mapped_column(default=datetime.now())
     deleted_at: Mapped[Optional[datetime]]
 
     def __repr__(self):
@@ -64,11 +64,11 @@ class Meal_Recipe(Base):
     __tablename__ = "meal_recipes"
     __table_args__ = {"schema": "food"}
 
-    id:         Mapped[int]    = mapped_column(primary_key=True)
-    meal_id:    Mapped["Meal"] = mapped_column(ForeignKey("food.meals.id"))
+    id:         Mapped[int]      = mapped_column(primary_key=True)
+    meal_id:    Mapped["Meal"]   = mapped_column(ForeignKey("food.meals.id"))
     recipe:     Mapped[str]
-    created_at: Mapped[datetime]
-    updated_at: Mapped[datetime]
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now())
+    updated_at: Mapped[datetime] = mapped_column(default=datetime.now())
     deleted_at: Mapped[Optional[datetime]]
 
     def __repr__(self):
@@ -79,12 +79,12 @@ class Meal_Review(Base):
     __tablename__ = "meal_reviews"
     __table_args__ = {"schema": "food"}
 
-    id:         Mapped[int]    = mapped_column(primary_key=True)
-    meal_id:    Mapped["Meal"] = mapped_column(ForeignKey("food.meals.id"))
+    id:         Mapped[int]      = mapped_column(primary_key=True)
+    meal_id:    Mapped["Meal"]   = mapped_column(ForeignKey("food.meals.id"))
     rating:     Mapped[int]
     review:     Mapped[str]
-    created_at: Mapped[datetime]
-    updated_at: Mapped[datetime]
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now())
+    updated_at: Mapped[datetime] = mapped_column(default=datetime.now())
     deleted_at: Mapped[Optional[datetime]]
 
     def __repr__(self):
@@ -95,12 +95,12 @@ class Meal_Note(Base):
     __tablename__  = "meal_notes"
     __table_args__ = {"schema": "food"}
 
-    id:         Mapped[int]    = mapped_column(primary_key=True)
-    meal_id:    Mapped["Meal"] = mapped_column(ForeignKey("food.meals.id"))
+    id:         Mapped[int]      = mapped_column(primary_key=True)
+    meal_id:    Mapped["Meal"]   = mapped_column(ForeignKey("food.meals.id"))
     name:       Mapped[str]
     note:       Mapped[str]
-    created_at: Mapped[datetime]
-    updated_at: Mapped[datetime]
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now())
+    updated_at: Mapped[datetime] = mapped_column(default=datetime.now())
     deleted_at: Mapped[Optional[datetime]]
 
     def __repr__(self):
@@ -111,14 +111,14 @@ class Ingredient(Base):
     __tablename__  = "ingredients"
     __table_args__ = {"schema": "food"}
 
-    id:           Mapped[int] = mapped_column(primary_key=True)
+    id:           Mapped[int]      = mapped_column(primary_key=True)
     name:         Mapped[str]
     keeps_days:   Mapped[int]
     purchase_qty: Mapped[str]
     note:         Mapped[str]
     storage:      Mapped[str]
-    created_at:   Mapped[datetime]
-    updated_at:   Mapped[datetime]
+    created_at:   Mapped[datetime] = mapped_column(default=datetime.now())
+    updated_at:   Mapped[datetime] = mapped_column(default=datetime.now())
     deleted_at:   Mapped[Optional[datetime]]
 
 
@@ -130,8 +130,8 @@ class Meal_Ingredient(Base):
     meal_id:       Mapped["Meal"]       = mapped_column(ForeignKey("food.meals.id"))
     ingredient_id: Mapped["Ingredient"] = mapped_column(ForeignKey("food.ingredients.id"))
     quantity:      Mapped[str]
-    created_at:    Mapped[datetime]
-    updated_at:    Mapped[datetime]
+    created_at:    Mapped[datetime]     = mapped_column(default=datetime.now())
+    updated_at:    Mapped[datetime]     = mapped_column(default=datetime.now())
     deleted_at:    Mapped[Optional[datetime]]
 
 
@@ -267,6 +267,12 @@ async def create_meal(meal_data: Meal_Create):
         session.refresh(meal)
         return {"meal": meal}
 
+
+### Update ###
+
+# TODO
+
+
 ### Delete ###
 
 @app.delete("/v1/meal/{meal_id}", tags=["Delete Methods"])
@@ -288,6 +294,11 @@ async def delete_meal(meal_id: Annotated[int, Path(title="Meal ID", gt=0, descri
             return {"message": f"Sucesfully deleted meal {meal_id}"}
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="There is no meal with that meal_id")
+
+
+### Search ###
+
+# TODO
 
 
 

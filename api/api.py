@@ -12,7 +12,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship, DeclarativeBase,
 
 # FastAPI Imports
 from typing import Annotated
-from fastapi import FastAPI, Path
+from fastapi import FastAPI, Path, HTTPException, status
 
 # Create Database engine
 engine = create_engine("postgresql://test:test@localhost:5433/food")
@@ -129,9 +129,14 @@ class Meal_Ingredient(Base):
 @app.get("/v1/meal/{meal_id}")
 async def get_meal(meal_id: Annotated[int, Path(title="Meal ID", gt=0, description="Description")]):
     with Session(engine) as session:
+
+        # Query to find meal
         stmt = select(Meal).where(Meal.id == meal_id)
 
-        meal = session.scalars(stmt).one()
+        # Query Result
+        meal = session.scalars(stmt).one_or_none()
 
-        return {"meal_id": meal_id, "meal": meal}
-
+        if meal is not None:
+            return {"meal_id": meal_id, "meal": meal}
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="There is no meal with that meal_id")

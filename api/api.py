@@ -11,7 +11,9 @@ from sqlalchemy import select, create_engine, String, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship, DeclarativeBase, Session
 
 # FastAPI Imports
+from enum import Enum
 from typing import Annotated
+from pydantic import BaseModel
 from fastapi import FastAPI, Path, status, HTTPException
 
 # Create Database engine
@@ -19,7 +21,9 @@ engine = create_engine("postgresql://test:test@localhost:5433/food")
 
 # Tag descriptions for fast API docs
 openapi_tags = [
-    {"name": "Get Methods", "description": "Get Records by ID"}
+    {"name": "Get Methods",    "description": "Get records by ID"},
+    {"name": "Post Methods",   "description": "Create new records"},
+    {"name": "Delete Methods", "description": "Delete records by ID"}
 ]
 
 # Create FastAPI App
@@ -42,7 +46,7 @@ class Meal(Base):
     __tablename__ = "meals"
     __table_args__ = {"schema": "food"}
 
-    id:         Mapped[int] = mapped_column(primary_key=True)
+    id:         Mapped[int]       = mapped_column(primary_key=True)
     name:       Mapped[str]
     source:     Mapped[str]
     type:       Mapped[List[str]] = mapped_column(ARRAY(String))
@@ -131,11 +135,32 @@ class Meal_Ingredient(Base):
     deleted_at:    Mapped[Optional[datetime]]
 
 
+########################
+### API Models/Enums ###
+########################
+
+# Enum to limit meal types
+class Meal_Type(str, Enum):
+    breakfast = "Breakfast"
+    lunch     = "Lunch"
+    dinner    = "Dinner"
+    desert    = "Desert"
+
+
+# Meal class for creating meals
+class Meal_Create(BaseModel):
+    name:       str
+    source:     str      | None = None
+    type:       List[Meal_Type]
+    num_meals:  int             = 1
+    keeps_days: int             = 1
+
+
 #####################
 ### API Endpoints ###
 #####################
 
-### Getters ###
+### Read ###
 
 @app.get("/v1/meal/{meal_id}", tags=["Get Methods"])
 async def get_meal(meal_id: Annotated[int, Path(title="Meal ID", gt=0, description="The ID of the meal you wish to fetch.")]):
@@ -215,6 +240,55 @@ async def get_note(ingredient_id: Annotated[int, Path(title="Ingredient ID", gt=
             return {"ingredient": ingredient}
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="There is no ingredient with that ingredient_id")
+
+
+### Create ###
+
+@app.post("/v1/meal", tags=["Post Methods"])
+async def create_meal(meal_data: Meal_Create):
+    with Session(engine) as session:
+
+        # Create ORM object
+        meal = Meal(
+            id         = None,
+            name       = meal_data.name,
+            source     = meal_data.source,
+            type       = meal_data.type,
+            num_meals  = meal_data.num_meals,
+            keeps_days = meal_data.keeps_days,
+        )
+
+        # Push object to database
+        session.begin()
+        session.add(meal)
+        session.commit()
+
+        # Update object and return to user
+        session.refresh(meal)
+        return {"meal": meal}
+
+### Delete ###
+
+@app.delete("/v1/meal/{meal_id}", tags=["Delete Methods"])
+async def delete_meal(meal_id: Annotated[int, Path(title="Meal ID", gt=0, description="The ID of the meal you wish to delete.")]):
+    with Session(engine) as session:
+
+        # Initialize session
+        session.begin()
+
+        # Query to find meal
+        stmt = select(Meal).where(Meal.id == meal_id)
+
+        # Query Result
+        meal = session.scalars(stmt).one_or_none()
+
+        if meal is not None:
+            session.delete(meal)
+            session.commit()
+            return {"message": f"Sucesfully deleted meal {meal_id}"}
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="There is no meal with that meal_id")
+
 
 
 

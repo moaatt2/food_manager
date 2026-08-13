@@ -714,9 +714,104 @@ async def delete_meal(meal_id: Annotated[int, Path(title="Meal ID", gt=0, descri
         if meal is not None:
             session.delete(meal)
             session.commit()
-            return {"message": f"Sucesfully deleted meal {meal_id}"}
+            return {"message": f"Successfully deleted meal {meal_id}"}
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="There is no meal with that meal_id")
+
+
+@app.delete("/v1/recipe/{recipe_id}", tags=["Delete Methods"])
+async def delete_recipe(recipe_id: Annotated[int, Path(title="Recipe ID", description="The ID of the recipe you wish to delete.")]):
+    with Session(engine) as session:
+        session.begin()
+
+        # Get recipe
+        stmt = select(Meal_Recipe).where(Meal_Recipe.id == recipe_id)
+        recipe = session.scalars(stmt).one_or_none()
+
+        # Handle missing recipe
+        if recipe is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="There is no recipe with that recipe_id")
+
+        # Delete recipe
+        session.delete(recipe)
+        session.commit()
+        return {"message": f"Successfully deleted recipe {recipe_id}"}
+
+
+@app.delete("/v1/review/{review_id}", tags=["Delete Methods"])
+async def delete_review(review_id: Annotated[int, Path(title="Review ID", description="The ID of the review you wish to delete.")]):
+    with Session(engine) as session:
+        session.begin()
+
+        # Get review
+        stmt = select(Meal_Review).where(Meal_Review.id == review_id)
+        review = session.scalars(stmt).one_or_none()
+
+        # Handle Missing Review
+        if review is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="There is no review with that review_id")
+
+        # Delete Review
+        session.delete(review)
+        session.commit()
+        return {"message": f"Successfully deleted review {review_id}"}
+
+
+@app.delete("/v1/note/{note_id}", tags=["Delete Methods"])
+async def delete_note(note_id: Annotated[int, Path(title="Note ID", description="The ID of the note you wish to delete.")]):
+    with Session(engine) as session:
+        session.begin()
+
+        # Get Note
+        stmt = select(Meal_Note).where(Meal_Note.id == note_id)
+        note = session.scalars(stmt).one_or_none()
+
+        # Handle missing note
+        if note is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="There is no note with that note_id")
+
+        # Delete Note
+        session.delete(note)
+        session.commit()
+        return {"message": f"Successfully deleted note {note_id}"}
+
+
+@app.delete("/v1/ingredient/{ingredient_id}", tags=["Delete Methods"])
+async def delete_ingredient(ingredient_id: Annotated[int, Path(title="Ingredient ID", description="The ID of the ingredient you wish to delete.")]):
+    with Session(engine) as session:
+        session.begin()
+
+        # Get ingredient
+        stmt = select(Ingredient).where(Ingredient.id == ingredient_id)
+        ingredient = session.scalars(stmt).one_or_none()
+
+        # Handle Missing Ingredient
+        if ingredient is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="There is no ingredient with that ingredient_id")
+
+        # Delete Ingredient
+        session.delete(ingredient)
+        session.commit()
+        return {"message": f"Successfully deleted ingredient {ingredient_id}"}
+
+
+@app.delete("/v1/meal_ingredient/{meal_ingredient_id}", tags=["Delete Methods"])
+async def delete_meal_ingredient(meal_ingredient_id: Annotated[int, Path(title="Meal Ingredient ID", description="The ID of the meal ingredient you wish to delete.")]):
+    with Session(engine) as session:
+        session.begin()
+
+        # Get Meal Ingredient
+        stmt = select(Meal_Ingredient).where(Meal_Ingredient.id == meal_ingredient_id)
+        meal_ingredient = session.scalars(stmt).one_or_none()
+
+        # Handle Missing Meal Ingredient
+        if meal_ingredient is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="There is no meal_ingredient with that meal_ingredient_id")
+
+        # Delete Meal Ingredient
+        session.delete(meal_ingredient)
+        session.commit()
+        return {"message": f"Successfully deleted meal ingredient {meal_ingredient_id}"}
 
 
 

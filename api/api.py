@@ -501,6 +501,9 @@ async def update_meal(meal_id: Annotated[int, Path(title="Meal ID", gt=0, descri
         if meal_data.keeps_days is not None:
             meal.keeps_days = meal_data.keeps_days
 
+        # Mark record updated
+        meal.updated_at = datetime.now()
+
         # Commit changes
         session.commit()
 

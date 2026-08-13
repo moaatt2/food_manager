@@ -198,6 +198,32 @@ class Meal_Update(BaseModel):
     keeps_days: int | None             = Field(ge=1, default=None)
 
 
+class Meal_Recipe_Update(BaseModel):
+    recipe: str | None = None
+
+
+class Meal_Review_Update(BaseModel):
+    rating: int | None = Field(ge=1, le=5, default=None)
+    review: str | None = None
+
+
+class Meal_Note_Update(BaseModel):
+    name: str | None = None
+    note: str | None = None
+
+
+class Ingredient_Update(BaseModel):
+    name:         str | None = None
+    keeps_days:   int | None = Field(ge=1, default=None)
+    purchase_qty: str | None = None
+    note:         str | None = None
+    storage:      str | None = None
+
+
+class Meal_Ingredient_Update(BaseModel):
+    quantity: str | None = None
+
+
 #####################
 ### API Endpoints ###
 #####################
@@ -511,6 +537,163 @@ async def update_meal(meal_id: Annotated[int, Path(title="Meal ID", gt=0, descri
         session.refresh(meal)
         return {"meal": meal}
 
+
+@app.put("/v1/recipe/{recipe_id}", tags=["Put Methods"])
+async def update_recipe(recipe_id: Annotated[int, Path(title="Recipe ID", description="The ID of the recipe you wish to update")], recipe_data: Meal_Recipe_Update):
+    with Session(engine) as session:
+        session.begin()
+
+        # Fetch Data from ORM
+        stmt = select(Meal_Recipe).where(Meal_Recipe.id == recipe_id)
+        recipe = session.scalars(stmt).one_or_none()
+
+        # Handle missing recipe
+        if recipe is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="There is no recipe with that recipe_id")
+
+        # Update ORM object
+        if recipe_data.recipe is not None:
+            recipe.recipe = recipe_data.recipe
+
+        # Mark record updated
+        recipe.updated_at = datetime.now()
+
+        # Commit changes
+        session.commit()
+
+        # Update/return object
+        session.refresh(recipe)
+        return {"recipe": recipe}
+
+
+@app.put("/v1/review/{review_id}", tags=["Put Methods"])
+async def update_review(review_id: Annotated[int, Path(title="Review ID", description="The ID of the recipe you wish to update")], review_data: Meal_Review_Update):
+    with Session(engine) as session:
+        session.begin()
+
+        # Fetch Data From ORM
+        stmt = select(Meal_Review).where(Meal_Review.id == review_id)
+        review = session.scalars(stmt).one_or_none()
+
+        # Handle Missing Review
+        if review is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="There is no review with that review_id")
+
+        # Update ORM object
+        if review_data.rating is not None:
+            review.rating = review_data.rating
+
+        if review_data.review is not None:
+            review.review = review_data.review
+
+        # Mark record updated
+        review.updated_at = datetime.now()
+
+        # Commit changes
+        session.commit()
+
+        # Update/return object
+        session.refresh(review)
+        return {"review": review}
+
+
+@app.put("/v1/note/{note_id}", tags=["Put Methods"])
+async def update_note(note_id: Annotated[int, Path(title="Note ID", description="The ID of the note you wish to update")], note_data: Meal_Note_Update):
+    with Session(engine) as session:
+        session.begin()
+
+        # Fetch data from ORM
+        stmt = select(Meal_Note).where(Meal_Note.id == note_id)
+        note = session.scalars(stmt).one_or_none()
+
+        # Handle missing note
+        if note is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="There is no review with that review_id")
+
+        # Update ORM object
+        if note_data.name is not None:
+            note.name = note_data.name
+
+        if note_data.note is not None:
+            note.note = note_data.note
+
+        # Mark record updated
+        note.updated_at = datetime.now()
+
+        # Commit changes
+        session.commit()
+
+        # Update/return object
+        session.refresh(note)
+        return {"note": note}
+
+
+@app.put("/v1/ingredient/{ingredient_id}", tags=["Put Methods"])
+async def update_ingredient(ingredient_id: Annotated[int, Path(title="Ingredient ID", description="The ID of the ingredient you wish to update")], ingredient_data: Ingredient_Update):
+    with Session(engine) as session:
+        session.begin()
+
+        # Fetch data from ORM
+        stmt = select(Ingredient).where(Ingredient.id == ingredient_id)
+        ingredient = session.scalars(stmt).one_or_none()
+
+        # Handle missing ingredient
+        if ingredient is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="There is no ingredient with that ingredient_id")
+
+        # Update ORM object
+        if ingredient_data.name is not None:
+            ingredient.name = ingredient_data.name
+
+        if ingredient_data.keeps_days is not None:
+            ingredient.keeps_days = ingredient_data.keeps_days
+
+        if ingredient_data.purchase_qty is not None:
+            ingredient.purchase_qty = ingredient_data.purchase_qty
+
+        if ingredient_data.note is not None:
+            ingredient.note = ingredient_data.note
+
+        if ingredient_data.storage is not None:
+            ingredient.storage = ingredient_data.storage
+
+        # Mark record updated
+        ingredient.updated_at = datetime.now()
+
+        # Commit changes
+        session.commit()
+
+        # Update/return object
+        session.refresh(ingredient)
+        return {"ingredient": ingredient}
+
+
+@app.put("/v1/meal_ingredient/{meal_ingredient_id}", tags=["Put Methods"])
+async def update_meal_ingredient(meal_ingredient_id: Annotated[int, Path(title="Meal Ingredient ID", description="The ID of the meal ingredient record you wish to update")], meal_ingredient_data: Meal_Ingredient_Update):
+    with Session(engine) as session:
+        session.begin()
+
+        # Fetch ORM data
+        stmt = select(Meal_Ingredient).where(Meal_Ingredient.id == meal_ingredient_id)
+        meal_ingredient = session.scalars(stmt).one_or_none()
+
+        # Handle Missing Ingredient
+        if meal_ingredient is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="There is no meal_ingredient with that meal_ingredient_id")
+
+        # Update ORM object
+        if meal_ingredient_data.quantity is not None:
+            meal_ingredient.quantity = meal_ingredient_data.quantity
+
+        # Mark record updated
+        meal_ingredient.updated_at = datetime.now()
+
+        # Commit changes
+        session.commit()
+
+        # Update/return object
+        session.refresh(meal_ingredient)
+        return {"meal_ingredient": meal_ingredient}
 
 
 ### Delete ###

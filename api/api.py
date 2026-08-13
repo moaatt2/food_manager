@@ -23,6 +23,7 @@ engine = create_engine("postgresql://test:test@localhost:5433/food")
 openapi_tags = [
     {"name": "Get Methods",    "description": "Get records by ID"},
     {"name": "Post Methods",   "description": "Create new records"},
+    {"name": "Put Methods",    "description": "Update records by ID"},
     {"name": "Delete Methods", "description": "Delete records by ID"}
 ]
 
@@ -146,6 +147,7 @@ class Meal_Type(str, Enum):
     dinner    = "Dinner"
     desert    = "Desert"
 
+### Create Models ###
 
 class Meal_Create(BaseModel):
     name:       str
@@ -184,6 +186,16 @@ class Meal_Ingredient_Create(BaseModel):
     meal_id:       int
     ingredient_id: int
     quantity:      str
+
+
+### Update Models ###
+
+class Meal_Update(BaseModel):
+    name:       str | None             = None
+    source:     str | None             = None
+    type:       List[Meal_Type] | None = None
+    num_meals:  int | None             = Field(ge=1, default=None)
+    keeps_days: int | None             = Field(ge=1, default=None)
 
 
 #####################
@@ -455,6 +467,47 @@ async def get_note(ingredient_id: Annotated[int, Path(title="Ingredient ID", gt=
             return {"ingredient": ingredient}
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="There is no ingredient with that ingredient_id")
+
+
+### Update ###
+
+@app.put("/v1/meal/{meal_id}", tags=["Put Methods"])
+async def update_meal(meal_id: Annotated[int, Path(title="Meal ID", gt=0, description="The ID of the meal you wish to update")], meal_data: Meal_Update):
+    with Session(engine) as session:
+
+        session.begin()
+
+        # Fetch data from ORM
+        stmt = select(Meal).where(Meal.id == meal_id)
+        meal = session.scalars(stmt).one_or_none()
+
+        # Handle missing meal
+        if meal is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="There is no meal with that meal_id")
+
+        # Update ORM object
+        if meal_data.name is not None:
+            meal.name = meal_data.name
+
+        if meal_data.source is not None:
+            meal.source = meal_data.source
+
+        if meal_data.type is not None:
+            meal.type = meal_data.type
+
+        if meal_data.num_meals is not None:
+            meal.num_meals = meal_data.num_meals
+
+        if meal_data.keeps_days is not None:
+            meal.keeps_days = meal_data.keeps_days
+
+        # Commit changes
+        session.commit()
+
+        # Update/return object
+        session.refresh(meal)
+        return {"meal": meal}
+
 
 
 ### Delete ###

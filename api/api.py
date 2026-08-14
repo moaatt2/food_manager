@@ -7,24 +7,25 @@
 from datetime import datetime
 from typing import List, Optional
 from sqlalchemy.dialects.postgresql import ARRAY
-from sqlalchemy import select, create_engine, String, ForeignKey, exc
+from sqlalchemy import select, create_engine, String, ForeignKey, exc, func, CTE
 from sqlalchemy.orm import Mapped, mapped_column, relationship, DeclarativeBase, Session
 
 # FastAPI Imports
 from enum import Enum
 from typing import Annotated
 from pydantic import BaseModel, Field
-from fastapi import FastAPI, Path, status, HTTPException
+from fastapi import FastAPI, Path, Query, status, HTTPException
 
 # Create Database engine
 engine = create_engine("postgresql://test:test@localhost:5433/food")
 
 # Tag descriptions for fast API docs
 openapi_tags = [
-    {"name": "Get Methods",    "description": "Get records by ID"},
+    {"name": "Meals",          "description": "Meal methods"},
     {"name": "Post Methods",   "description": "Create new records"},
+    {"name": "Get Methods",    "description": "Read records by ID"},
     {"name": "Put Methods",    "description": "Update records by ID"},
-    {"name": "Delete Methods", "description": "Delete records by ID"}
+    {"name": "Delete Methods", "description": "Delete records by ID"},
 ]
 
 # Create FastAPI App
@@ -813,5 +814,66 @@ async def delete_meal_ingredient(meal_ingredient_id: Annotated[int, Path(title="
         session.commit()
         return {"message": f"Successfully deleted meal ingredient {meal_ingredient_id}"}
 
+
+### Search ###
+
+@app.get("/v1/search/meals", tags=["Meals", "Get Methods"])
+async def search_meals(
+    ingredients_exclude: Annotated[List[int]       | None, Query(title="Ingredients Exclude", description="A list of igredient_ids for the ingredients you don't want in the meals")] = None,
+    ingredients_include: Annotated[List[int]       | None, Query(title="Ingredients Include", description="A list of igredient_ids for the ingredients you want in the meals")] = None,
+    types:               Annotated[List[Meal_Type] | None, Query(title="Types", description="The types of food you want to see")] = None,
+    min_avg_review:      Annotated[float           | None, Query(title="Minimum Average Review", description="The minimum average review value of meals you want to see")] = None,
+    limit:               Annotated[int             | None, Query(title="Limit",  description="The maximum number of results to return at once", ge=1, le=25)] = 10,
+    cursor:              Annotated[int             | None, Query(title="Cursor", description="Enter a value here to get the next page of results if it exists", ge=0)] = None,
+):
+    with Session(engine) as session:
+        session.begin()
+
+        # Intial Query
+        stmt = select(Meal).limit(limit).order_by(Meal.id.asc())
+
+        # Handle Minimum Average Review
+        if min_avg_review is not None:
+
+            # Find the average reviews of all meals
+            review_cte = select(Meal.id.label("meal_id"), func.avg(Meal_Review.rating).label("avg_review")).join(Meal_Review).group_by(Meal.id).limit(limit).cte(name="avg_reviews")
+
+            # Apply the CTE to the query
+            stmt = stmt.join(review_cte, review_cte.c.meal_id == Meal.id).where(review_cte.c.avg_review >= min_avg_review)
+
+        # Handle Types
+        if types is not None:
+            stmt = stmt.where(Meal.type.overlap(types))
+
+        # Handle including ingredients
+        if ingredients_include is not None:
+
+            # Find meals that have the desired ingredient
+            ingredient_include_cte = select(Meal.id).distinct().join(Meal_Ingredient).where(Meal_Ingredient.ingredient_id.in_(ingredients_include)).cte(name="ingredient_include")
+
+            # Filter to just meals with the desired ingredient
+            stmt = stmt.join(ingredient_include_cte, ingredient_include_cte.c.id == Meal.id).where(Meal.id == ingredient_include_cte.c.id)
+
+        # Handle exluding ingredients
+        if ingredients_exclude is not None:
+
+            # Find meals that have the unddesired ingredient
+            ingredient_exclude_cte = select(Meal.id).distinct().join(Meal_Ingredient).where(Meal_Ingredient.ingredient_id.in_(ingredients_exclude)).cte(name="ingredient_exclude")
+
+            # Filter to just meals without the undesired ingredient
+            stmt = stmt.join(ingredient_exclude_cte, ingredient_exclude_cte.c.id == Meal.id, isouter=True).where(ingredient_exclude_cte.c.id == None)
+
+
+        # Handle Cursor
+        if cursor:
+            stmt = stmt.filter(Meal.id > cursor)
+
+        # Get Results
+        meals = session.scalars(stmt).all()
+
+        return {
+            "meals": meals,
+            "next_cursor": meals[-1].id if meals else None
+        }
 
 

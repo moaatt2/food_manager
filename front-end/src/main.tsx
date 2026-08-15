@@ -7,17 +7,54 @@ interface ButtonProps {
   disabled:boolean;
 }
 
-function TestButton({title, disabled}: ButtonProps) {
+// Single Input
+function NamedButton({title}: {title: string}) {
+  return (
+    <button>{title}</button>
+  )
+}
+
+// Multiple inputs
+function ControllableButton({title, disabled}: ButtonProps) {
   return (
     <button disabled={disabled}>{title}</button>
+  )
+}
+
+// Test Nesting Components
+function TestForm() {
+  return (
+    <form>
+      <NamedButton title="submit" />
+    </form>
+  )
+}
+
+// Button click reaction
+function ButtonClicker() {
+  function handleClick() {
+    alert('You clicked me!');
+  }
+
+  return (
+    <div>
+    <h2>0 Clicks</h2>
+    <button onClick={handleClick}>Click Me</button>
+    </div>
   )
 }
 
 export default function TestApp() {
   return (
     <div>
-      <h1>Hello</h1>
-      <TestButton title="Test" disabled={false}/>
+      <h1>Hello Vite</h1>
+      <NamedButton title="Named Button"/>
+      <br />
+      <ControllableButton title="Controllable button" disabled={false}/>
+      <br />
+      <TestForm/>
+      <br />
+      <ButtonClicker />
     </div>
   )
 }

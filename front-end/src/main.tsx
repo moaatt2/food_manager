@@ -61,7 +61,29 @@ function ButtonClicker2() {
 }
 
 
+interface ClickerProps {
+  count: number;
+  onClick: ()=>void;
+}
+
+// Button Clicker taking state from app to share state across multiple instances
+function ButtonClicker3({count, onClick}: ClickerProps) {
+  return (
+    <div>
+    <h2>{count} Clicks</h2>
+    <button onClick={onClick}>Click Me</button>
+    </div>
+  )
+}
+
+
 export default function TestApp() {
+  const[count, setCount] = useState(0)
+
+  function handleClick() {
+    setCount(count + 1 );
+  }
+
   return (
     <div>
       <h1>Hello Vite</h1>
@@ -74,6 +96,12 @@ export default function TestApp() {
       <ButtonClicker />
       <br />
       <ButtonClicker2 />
+      <br />
+      <ButtonClicker2 />
+      <br />
+      <ButtonClicker3 count={count} onClick={handleClick}/>
+      <br />
+      <ButtonClicker3 count={count} onClick={handleClick}/>
     </div>
   )
 }

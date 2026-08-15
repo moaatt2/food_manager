@@ -1,4 +1,4 @@
-import { StrictMode } from 'react'
+import { StrictMode, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 
@@ -44,6 +44,23 @@ function ButtonClicker() {
   )
 }
 
+// Button Clicker with state - update count on click
+function ButtonClicker2() {
+  const [count, setCount] = useState(0)
+
+  function handleClick() {
+    setCount(count + 1 );
+  }
+
+  return (
+    <div>
+    <h2>{count} Clicks</h2>
+    <button onClick={handleClick}>Click Me</button>
+    </div>
+  )
+}
+
+
 export default function TestApp() {
   return (
     <div>
@@ -55,6 +72,8 @@ export default function TestApp() {
       <TestForm/>
       <br />
       <ButtonClicker />
+      <br />
+      <ButtonClicker2 />
     </div>
   )
 }

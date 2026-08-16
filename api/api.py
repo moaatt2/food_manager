@@ -14,6 +14,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship, DeclarativeBase,
 from enum import Enum
 from typing import Annotated
 from pydantic import BaseModel, Field
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, Path, Query, status, HTTPException
 
 # Create Database engine
@@ -34,6 +35,20 @@ app = FastAPI(
     version="0.0.0",
     openapi_tags=openapi_tags
     )
+
+# List of domains that can access API results
+origins = [
+    "http://localhost:5175",
+]
+
+# Use middleware to set up CORS headers for specified domains
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 ######################

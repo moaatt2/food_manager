@@ -1,4 +1,4 @@
-import { StrictMode, useState } from 'react'
+import { StrictMode, useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import './main.css'
@@ -44,7 +44,6 @@ function getMeal(meal_id: number): Promise<Meal> {
   .then(res => res.json())
   .then(res => {return res.meal as Meal})
 }
-const meal = await getMeal(1);
 // console.log(await getMeal(1)); // Working
 
 
@@ -53,7 +52,7 @@ function getMeals(): Promise<Meal[]> {
     method: 'Get',
   })
   .then(res => res.json())
-  .then(res => {return res as Meal[]})
+  .then(res => {return res.meals as Meal[]})
 }
 // console.log(await getMeals()); // Working
 
@@ -155,6 +154,26 @@ function MealCard({meal}: {meal: Meal}) {
   )
 }
 
+// A list of meal cards
+function MealCardList() {
+  const [meals, setMeals] = useState<Meal[]>([])
+
+  useEffect(() => {
+    fetch('http://localhost:3000/v1/search/meals', {
+        method: 'Get',
+      })
+      .then(res => res.json())
+      .then(res => setMeals(res.meals))
+      .catch((err) => {console.log(err.message)})
+  }, []);
+
+  return (
+    <div>
+      {meals.map((meal) => <div key={`parent_${meal.id}`}><MealCard meal={meal}/></div>)}
+    </div>
+  )
+}
+
 
 export default function TestApp() {
   const[count, setCount] = useState(0)
@@ -182,7 +201,7 @@ export default function TestApp() {
       <br />
       <ButtonClicker3 count={count} onClick={handleClick}/>
       <hr />
-      <MealCard meal={meal} />
+      <MealCardList />
     </div>
   )
 }

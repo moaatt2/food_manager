@@ -1,0 +1,25 @@
+
+div.mealCard {
+
+    padding: 5px;
+    box-shadow: 2pt 2pt 2pt grey;
+    
+    border-radius: 25px;
+
+    h3.mealTitle {
+        margin: 2px 0px;
+    }
+
+    p.dateText {
+        font-size: 12px;
+    }zs
+
+    ul.typeList {
+        margin: 2px 0px;
+    }
+
+}
+
+div.mealCard:hover {
+    box-shadow: 5pt 5pt 5pt grey;
+}

@@ -2,6 +2,7 @@
 div.mealCard {
 
     padding: 5px;
+    margin: 6px;
     box-shadow: 2pt 2pt 2pt grey;
     
     border-radius: 25px;

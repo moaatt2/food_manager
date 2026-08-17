@@ -111,3 +111,36 @@ createRoot(document.getElementById('root')!).render(
     <TestApp />
   </StrictMode>,
 )
+
+
+interface Meal {
+  id:         number
+  name:       string
+  source:     string | null
+  type:       Array<string>
+  num_meals:  number
+  keeps_days: number
+  created_at: Date
+  updated_at: Date
+  deleted_at: Date | null
+}
+
+
+function getMeal(meal_id: number): Promise<Meal> {
+  return fetch(`http://localhost:3000/v1/meal/${meal_id}`, {
+    method: 'Get',
+  })
+  .then(res => res.json())
+  .then(res => {return res as Meal})
+}
+// console.log(await getMeal(1)); // Working
+
+
+function getMeals(): Promise<Meal[]> {
+  return fetch('http://localhost:3000/v1/search/meals', {
+    method: 'Get',
+  })
+  .then(res => res.json())
+  .then(res => {return res as Meal[]})
+}
+// console.log(await getMeals()); // Working

@@ -24,3 +24,16 @@ div.mealCard {
 div.mealCard:hover {
     box-shadow: 5pt 5pt 5pt grey;
 }
+
+form.mealSearchForm {
+    display: flex;
+    justify-content: center;
+
+    td.label {
+        text-align: right;
+    }
+
+    td.input {
+        text-align: left;
+    }
+}

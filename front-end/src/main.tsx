@@ -175,6 +175,51 @@ function MealCardList() {
 }
 
 
+function MealSearchForm() {
+  return (
+    <form className="mealSearchForm">
+      <table>
+        <tbody>
+          {/* Ingredients Include */}
+          <tr>
+            <td className='label'><label htmlFor="ingredients_include">Ingredients Include: </label></td>
+            <td className='input'><input type="text" name="ingredients_include" /></td>
+          </tr>
+
+          {/* Ingredients Exclude */}
+          <tr>
+            <td className='label'><label htmlFor="ingredients_exclude">Ingredients Exclude: </label></td>
+            <td className='input'><input type="text" name="ingredients_exclude" /></td>
+          </tr>
+
+          {/* Types */}
+          <tr>
+            <td className='label'><label htmlFor="types">Type(s): </label></td>
+            <td className='input'>
+              <select name="types" id="types" multiple>
+                <option value="Breakfast">Breakfast</option>
+                <option value="Lunch">Lunch</option>
+                <option value="Dinner">Dinner</option>
+                <option value="Dessert">Dessert</option>
+              </select>
+            </td>
+          </tr>
+
+          {/* Minimum Average Review */}
+          <tr>
+            <td className='label'><label htmlFor="min_avg_review">Minium Average Review: </label></td>
+            <td className='input'><input type="number" name="min_avg_review" id="min_avg_review" min={0} max={5} step={0.1} defaultValue={4} /></td>
+          </tr>
+          <tr>
+            <td colSpan={2}><button type="submit">Update Filters</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </form>
+  )
+}
+
+
 export default function TestApp() {
   const[count, setCount] = useState(0)
 
@@ -202,6 +247,8 @@ export default function TestApp() {
       <ButtonClicker3 count={count} onClick={handleClick}/>
       <hr />
       <MealCardList />
+      <hr />
+      <MealSearchForm />
     </div>
   )
 }

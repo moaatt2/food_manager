@@ -25,7 +25,7 @@ div.mealCard:hover {
     box-shadow: 5pt 5pt 5pt grey;
 }
 
-form.mealSearchForm {
+form {
     display: flex;
     justify-content: center;
 
@@ -35,5 +35,17 @@ form.mealSearchForm {
 
     td.input {
         text-align: left;
+    }
+
+    td.submit {
+        button {
+            font-size: 20px;
+            padding: 5px;
+            margin: 5px;
+        }
+    }
+
+    tr.invalid {
+        background-color: #46171d;
     }
 }

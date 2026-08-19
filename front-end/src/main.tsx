@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import './main.css'
 
+const API_ADDRESS: string = '';
 
 /**
  * Interfaces
@@ -132,7 +133,7 @@ function MealSearchComponent() {
 
 
     // Request Meals
-    fetch('http://localhost:3000/v1/search/meals?' + params.toString(), {
+    fetch(`http://${API_ADDRESS}:3000/v1/search/meals?` + params.toString(), {
       method: 'Get',
     })
     .then(res => res.json())
@@ -142,7 +143,7 @@ function MealSearchComponent() {
 
     // Get ingredients list a single time
     if (ingredients.length == 0) {
-      fetch('http://localhost:3000/v1/search/ingredients', {
+      fetch(`http://${API_ADDRESS}:3000/v1/search/ingredients`, {
         method: 'Get',
       })
       .then(res => res.json())

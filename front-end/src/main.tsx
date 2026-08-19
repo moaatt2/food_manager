@@ -1,4 +1,4 @@
-import { StrictMode, useEffect, useState } from 'react'
+import React, { StrictMode, useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import './main.css'
@@ -7,19 +7,6 @@ import './main.css'
 /**
  * Interfaces
  */
-
-interface ButtonProps {
-  title: string;
-  disabled:boolean;
-}
-
-
-interface ClickerProps {
-  count: number;
-  onClick: ()=>void;
-}
-
-
 interface Meal {
   id:         number
   name:       string
@@ -30,6 +17,11 @@ interface Meal {
   created_at: string
   updated_at: string
   deleted_at: string | null
+}
+
+interface Ingredient {
+  id:   number
+  name: string
 }
 
 
@@ -61,70 +53,6 @@ function getMeals(): Promise<Meal[]> {
  * UI Functions
  */
 
-// Single Input
-function NamedButton({title}: {title: string}) {
-  return (
-    <button>{title}</button>
-  )
-}
-
-// Multiple inputs
-function ControllableButton({title, disabled}: ButtonProps) {
-  return (
-    <button disabled={disabled}>{title}</button>
-  )
-}
-
-// Test Nesting Components
-function TestForm() {
-  return (
-    <form>
-      <NamedButton title="submit" />
-    </form>
-  )
-}
-
-// Button click reaction
-function ButtonClicker() {
-  function handleClick() {
-    alert('You clicked me!');
-  }
-
-  return (
-    <div>
-    <h2>0 Clicks</h2>
-    <button onClick={handleClick}>Click Me</button>
-    </div>
-  )
-}
-
-// Button Clicker with state - update count on click
-function ButtonClicker2() {
-  const [count, setCount] = useState(0)
-
-  function handleClick() {
-    setCount(count + 1 );
-  }
-
-  return (
-    <div>
-    <h2>{count} Clicks</h2>
-    <button onClick={handleClick}>Click Me</button>
-    </div>
-  )
-}
-
-// Button Clicker taking state from app to share state across multiple instances
-function ButtonClicker3({count, onClick}: ClickerProps) {
-  return (
-    <div>
-    <h2>{count} Clicks</h2>
-    <button onClick={onClick}>Click Me</button>
-    </div>
-  )
-}
-
-
 // Card for a meal
 function MealCard({meal}: {meal: Meal}) {
 
@@ -154,101 +82,134 @@ function MealCard({meal}: {meal: Meal}) {
   )
 }
 
-// A list of meal cards
-function MealCardList() {
+
+// Component allowing the user to search for a meal
+function MealSearchComponent() {
   const [meals, setMeals] = useState<Meal[]>([])
+  const [ingredients, setIngredients] = useState<Ingredient[]>([])
+
+
+  const [minAvgReview, setMinAvgReview] = useState<number>(4);
+  function minAvgReviewChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setMinAvgReview(e.target.valueAsNumber);
+  }
+
+  const [types, setTypes] = useState<string[]>([]);
+  function typesChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    setTypes([...e.target.options].filter(option => option.selected).map(option => option.value));
+  }
+
+  const [includeIngredients, setIncludeIngredients] = useState<string[]>([]);
+  function includeIngredientsChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    setIncludeIngredients([...e.target.options].filter(option => option.selected).map(option => option.value))
+  }
+
+  const [excludeIngredients, setExcludeIngredients] = useState<string[]>([]);
+  function excludeIngredientsChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    setExcludeIngredients([...e.target.options].filter(option => option.selected).map(option => option.value))
+  }
 
   useEffect(() => {
-    fetch('http://localhost:3000/v1/search/meals', {
+    // Construct params with 
+    let params = new URLSearchParams({
+      min_avg_review: minAvgReview.toString(),
+    });
+
+    // Add types to filter
+    for (let type of types) {
+      params.append("types", type);
+    }
+
+    // Add Include Ingredients
+    for (let includeIngredient of includeIngredients) {
+      params.append("ingredients_include", includeIngredient);
+    }
+
+    // Add Exclude Ingredients
+    for (let excludeIngredient of excludeIngredients) {
+      params.append("ingredients_exclude", excludeIngredient);
+    }
+
+
+    // Request Meals
+    fetch('http://localhost:3000/v1/search/meals?' + params.toString(), {
+      method: 'Get',
+    })
+    .then(res => res.json())
+    .then(res => setMeals(res.meals))
+    .catch((err) => {console.log(err.message)})
+
+
+    // Get ingredients list a single time
+    if (ingredients.length == 0) {
+      fetch('http://localhost:3000/v1/search/ingredients', {
         method: 'Get',
       })
       .then(res => res.json())
-      .then(res => setMeals(res.meals))
+      .then(res => setIngredients(res.ingredients))
       .catch((err) => {console.log(err.message)})
-  }, []);
+    }
+  }, [minAvgReview, types, includeIngredients, excludeIngredients]);
 
   return (
     <div>
-      {meals.map((meal) => <div key={`parent_${meal.id}`}><MealCard meal={meal}/></div>)}
+      <form className="mealSearchForm">
+        <table>
+          <tbody>
+            {/* Ingredients Include */}
+            <tr>
+              <td className='label'><label htmlFor="ingredients_include">Ingredients Include: </label></td>
+              <td className='input'>
+                <select name="ingredients_include" onChange={includeIngredientsChange} value={includeIngredients} multiple={true} size={4}>
+                  {ingredients.map(ingredient => <option key={ingredient.id} value={ingredient.id}>{ingredient.name}</option>)}
+                </select>
+              </td>
+            </tr>
+
+            {/* Ingredients Exclude */}
+            <tr>
+              <td className='label'><label htmlFor="ingredients_exclude">Ingredients Exclude: </label></td>
+              <td className='input'>
+                <select name="ingredients_exclude" onChange={excludeIngredientsChange} value={excludeIngredients} multiple={true} size={4}>
+                  {ingredients.map(ingredient => <option key={ingredient.id} value={ingredient.id}>{ingredient.name}</option>)}
+                </select>
+              </td>
+            </tr>
+
+            {/* Types */}
+            <tr>
+              <td className='label'><label htmlFor="types">Type(s): </label></td>
+              <td className='input'>
+                <select name="types" onChange={typesChange} value={types} multiple={true}>
+                  <option value="Breakfast">Breakfast</option>
+                  <option value="Lunch">Lunch</option>
+                  <option value="Dinner">Dinner</option>
+                  <option value="Desert">Dessert</option>
+                </select>
+              </td>
+            </tr>
+
+            {/* Minimum Average Review */}
+            <tr>
+              <td className='label'><label htmlFor="min_avg_review">Minium Average Review: </label></td>
+              <td className='input'><input type="number" onChange={minAvgReviewChange} min={1} max={5} step={0.1} value={minAvgReview} /></td>
+            </tr>
+          </tbody>
+        </table>
+      </form>
+      <hr />
+      <div>
+        {meals.map((meal) => <div key={`parent_${meal.id}`}><MealCard meal={meal}/></div>)}
+      </div>
     </div>
   )
 }
 
 
-function MealSearchForm() {
-  return (
-    <form className="mealSearchForm">
-      <table>
-        <tbody>
-          {/* Ingredients Include */}
-          <tr>
-            <td className='label'><label htmlFor="ingredients_include">Ingredients Include: </label></td>
-            <td className='input'><input type="text" name="ingredients_include" /></td>
-          </tr>
-
-          {/* Ingredients Exclude */}
-          <tr>
-            <td className='label'><label htmlFor="ingredients_exclude">Ingredients Exclude: </label></td>
-            <td className='input'><input type="text" name="ingredients_exclude" /></td>
-          </tr>
-
-          {/* Types */}
-          <tr>
-            <td className='label'><label htmlFor="types">Type(s): </label></td>
-            <td className='input'>
-              <select name="types" id="types" multiple>
-                <option value="Breakfast">Breakfast</option>
-                <option value="Lunch">Lunch</option>
-                <option value="Dinner">Dinner</option>
-                <option value="Dessert">Dessert</option>
-              </select>
-            </td>
-          </tr>
-
-          {/* Minimum Average Review */}
-          <tr>
-            <td className='label'><label htmlFor="min_avg_review">Minium Average Review: </label></td>
-            <td className='input'><input type="number" name="min_avg_review" id="min_avg_review" min={0} max={5} step={0.1} defaultValue={4} /></td>
-          </tr>
-          <tr>
-            <td colSpan={2}><button type="submit">Update Filters</button></td>
-          </tr>
-        </tbody>
-      </table>
-    </form>
-  )
-}
-
-
 export default function TestApp() {
-  const[count, setCount] = useState(0)
-
-  function handleClick() {
-    setCount(count + 1 );
-  }
-
   return (
     <div>
-      <h1>Hello Vite</h1>
-      <NamedButton title="Named Button"/>
-      <br />
-      <ControllableButton title="Controllable button" disabled={false}/>
-      <br />
-      <TestForm/>
-      <br />
-      <ButtonClicker />
-      <br />
-      <ButtonClicker2 />
-      <br />
-      <ButtonClicker2 />
-      <br />
-      <ButtonClicker3 count={count} onClick={handleClick}/>
-      <br />
-      <ButtonClicker3 count={count} onClick={handleClick}/>
-      <hr />
-      <MealCardList />
-      <hr />
-      <MealSearchForm />
+      <MealSearchComponent />
     </div>
   )
 }

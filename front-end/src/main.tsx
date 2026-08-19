@@ -210,7 +210,7 @@ function MealSearchComponent() {
 
 
 function IngredientCreateComponent() {
-  const [message, setMessage] = useState<string>("");
+  const [message, setMessage] = useState<string>("* Denotes required fields.");
 
   function createIngredient(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -237,17 +237,24 @@ function IngredientCreateComponent() {
 
     // Create Ingredient Record
     if (message.length == 0) {
+
+      let body: {[k: string]: any} = {
+        name: formData.get("name"),
+        keeps_days: formData.get("keeps_days"),
+        purchase_qty: formData.get("purchase_qty"),
+        storage: formData.get("storage"),
+      }
+
+      if (formData.get("note")) {
+        body.note = formData.get("note");
+      }
+
       fetch(`http://${API_ADDRESS}:${API_PORT}/v1/ingredient`, {
         method: "Post",
         headers: {
           "Content-Type": "Application/JSON",
         },
-        body: JSON.stringify({
-          name: formData.get("name"),
-          keeps_days: formData.get("keeps_days"),
-          purchase_qty: formData.get("purchase_qty"),
-          storage: formData.get("storage"),
-        }),
+        body: JSON.stringify(body),
       })
       .then(response => response.json())
       .then(response => setMessage(`Sucessfully created ingredient ${response.ingredient.name} with ID ${response.ingredient.id}.`))
@@ -301,6 +308,16 @@ function IngredientCreateComponent() {
               </td>
               <td className='input'>
                 <input type="text" name="storage" id="storage" /> *
+              </td>
+            </tr>
+
+            {/* Note */}
+            <tr id="ingredient_create_note_row">
+              <td className='label'>
+                <label>Notes:</label>
+              </td>
+              <td className='input'>
+                <textarea name="note" id="note" cols={22} rows={4}></textarea>
               </td>
             </tr>
 

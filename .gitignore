@@ -9,3 +9,6 @@ node_modules
 
 # Ignore test scripts
 test_scripts/*
+
+# Ignore secret files
+.env

@@ -209,10 +209,135 @@ function MealSearchComponent() {
 }
 
 
+function IngredientCreateComponent() {
+  const [message, setMessage] = useState<string>("");
+
+  function createIngredient(e: React.SubmitEvent<HTMLFormElement>) {
+    e.preventDefault();
+
+    const form = e.target;
+    const formData = new FormData(form);
+
+    const fields = [
+      {name: "name",         clean_name: "Name",               rowID: "ingredient_create_name_row"},
+      {name: "keeps_days",   clean_name: "Keeps Days",         rowID: "ingredient_create_keeps_days_row"},
+      {name: "purchase_qty", clean_name: "Purchase Quantity",  rowID: "ingredient_create_purchase_qty_row"},
+      {name: "storage",      clean_name: "Storage",            rowID: "ingredient_create_storage_row"},
+    ]
+
+    let message = "";
+    for (let field of fields) {
+      let element = document.getElementById(field.rowID);
+      if (!formData.get(field.name)) {
+        element?.classList.add('invalid');
+        message += `${field.clean_name} must have a value.\n`;
+      } else {element?.classList.remove('invalid')}
+    }
+    setMessage(message);
+
+    // Create Ingredient Record
+    if (message.length == 0) {
+      fetch(`http://${API_ADDRESS}:${API_PORT}/v1/ingredient`, {
+        method: "Post",
+        headers: {
+          "Content-Type": "Application/JSON",
+        },
+        body: JSON.stringify({
+          name: formData.get("name"),
+          keeps_days: formData.get("keeps_days"),
+          purchase_qty: formData.get("purchase_qty"),
+          storage: formData.get("storage"),
+        }),
+      })
+      .then(response => response.json())
+      .then(response => setMessage(`Sucessfully created ingredient ${response.ingredient.name} with ID ${response.ingredient.id}.`))
+      .catch(error => {
+        console.log(error);
+        setMessage("Failed to create ingredient.");
+      });
+    }
+  }
+
+  return (
+    <div>
+      <form onSubmit={createIngredient}>
+        <table>
+          <tbody>
+
+            {/* Name */}
+            <tr id="ingredient_create_name_row">
+              <td className='label'>
+                <label>Name:</label>
+              </td>
+              <td className='input'>
+                <input type="text" name="name" id="name" /> *
+              </td>
+            </tr>
+
+            {/* Keeps Days */}
+            <tr id="ingredient_create_keeps_days_row">
+              <td className='label'>
+                <label>Keeps Days:</label>
+              </td>
+              <td className='input'>
+                <input type="number" name="keeps_days" id="keeps_days" min={0} step={1} defaultValue={1} /> *
+              </td>
+            </tr>
+
+            {/* Purchase Quantity */}
+            <tr id="ingredient_create_purchase_qty_row">
+              <td className='label'>
+                <label>Purchase Quantity:</label>
+              </td>
+              <td className='input'>
+                <input type="text" name="purchase_qty" id="purchase_qty" /> *
+              </td>
+            </tr>
+
+            {/* Storage */}
+            <tr id="ingredient_create_storage_row">
+              <td className='label'>
+                <label>Storage:</label>
+              </td>
+              <td className='input'>
+                <input type="text" name="storage" id="storage" /> *
+              </td>
+            </tr>
+
+            <tr>
+              <td colSpan={2}>
+                <p style={{whiteSpace: 'pre-line'}}>{message}</p>
+              </td>
+            </tr>
+
+            <tr>
+              <td colSpan={2} className='submit'>
+                <button type="submit">Create Ingredient</button>
+              </td>
+            </tr>
+
+          </tbody>
+        </table>
+      </form>
+    </div>
+  )
+}
+
+
+function MealCreateComponent() {
+  return (
+    <div></div>
+  )  
+}
+
+
 export default function TestApp() {
   return (
     <div>
       <MealSearchComponent />
+      <hr />
+      <hr />
+      <IngredientCreateComponent />
     </div>
   )
 }

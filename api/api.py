@@ -23,6 +23,7 @@ engine = create_engine("postgresql://test:test@localhost:5433/food")
 # Tag descriptions for fast API docs
 openapi_tags = [
     {"name": "Meals",          "description": "Meal methods"},
+    {"name": "Ingredients",    "description": "Ingredient methods"},
     {"name": "Post Methods",   "description": "Create new records"},
     {"name": "Get Methods",    "description": "Read records by ID"},
     {"name": "Put Methods",    "description": "Update records by ID"},
@@ -889,6 +890,26 @@ async def search_meals(
         return {
             "meals": meals,
             "next_cursor": meals[-1].id if meals else None
+        }
+
+
+# Used to populate ingredient filter slot on UI
+@app.get("/v1/search/ingredients", tags=["Ingredients", "Get Methods"])
+async def search_ingredients(
+    in_meal: Annotated[bool, Query(title="In Meal", description="Only return ingredients if they are in a meal")] = True,
+):
+    with Session(engine) as session:
+        session.begin()
+
+        stmt = select(Ingredient.id, Ingredient.name)
+
+        if in_meal:
+            stmt = stmt.distinct().join(Meal_Ingredient)
+
+        ingredients = session.execute(stmt).all()
+
+        return {
+            "ingredients": [{"id": i[0], "name": i[1]} for i in ingredients],
         }
 
 
